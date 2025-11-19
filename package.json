@@ -1,0 +1,21 @@
+{
+  "name": "code_live_platform",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm i --prefix server && npm i --prefix client && npm run build --prefix client",
+    "start": "npm run start --prefix server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MarcoFernstaedt/code_live_platform.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MarcoFernstaedt/code_live_platform/issues"
+  },
+  "homepage": "https://github.com/MarcoFernstaedt/code_live_platform#readme"
+}
