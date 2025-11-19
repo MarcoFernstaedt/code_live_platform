@@ -4,7 +4,8 @@
   "description": "",
   "main": "src/server.ts",
   "scripts": {
-    "dev": "nodemon --watch . --ext ts --exec ts-node src/server.ts"
+    "dev": "nodemon --watch . --ext ts --exec ts-node src/server.ts",
+    "start": "node src/server.ts"
   },
   "type": "module",
   "keywords": [],
