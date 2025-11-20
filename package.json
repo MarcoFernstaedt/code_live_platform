@@ -7,6 +7,9 @@
     "build": "npm i --prefix server && npm i --prefix client && npm run build --prefix client",
     "start": "npm run start --prefix server"
   },
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MarcoFernstaedt/code_live_platform.git"
