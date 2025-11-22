@@ -1,12 +1,12 @@
 import express from 'express';
 import type { Request, Response } from 'express';
-import router from './routes/index.ts';
-import { ENV } from './lib/env.ts';
-import connectDB from './lib/db.ts';
+import router from './routes/index.js';
+import { ENV } from './lib/env.js';
+import connectDB from './lib/db.js';
 import path from 'path';
 import cors from 'cors';
 import { serve } from 'inngest/express';
-import { functions, inngest } from './lib/inngest.ts';
+import { functions, inngest } from './lib/inngest.js';
 
 const app = express();
 const PORT = ENV.PORT || 5000;
