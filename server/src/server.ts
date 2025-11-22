@@ -35,7 +35,7 @@ app.use('/api', router);
 if (ENV.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../client/dist')));
 
-  app.get('[*any]', (req: Request, res: Response) => {
+  app.get('[*any]', (_req: Request, res: Response) => {
     res.sendFile(path.join(__dirname, '../client/dist/index.html'));
   });
 }
@@ -47,3 +47,4 @@ if (ENV.NODE_ENV === 'production') {
     console.log('Server running on port:', PORT);
   });
 })();
+
