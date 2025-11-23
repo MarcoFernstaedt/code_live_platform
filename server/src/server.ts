@@ -8,6 +8,7 @@ import cors from 'cors';
 import { serve } from 'inngest/express';
 import { functions, inngest } from './lib/inngest.js';
 import { clerkMiddleware} from '@clerk/express'
+import { errorHandler } from './middleware/error.js';
 
 const app = express();
 const PORT = ENV.PORT || 5000;
@@ -21,6 +22,7 @@ app.use(cors({
   credentials: true,
 }))
 app.use(clerkMiddleware)
+app.use(errorHandler)
 
 app.use(
   "/api/inngest",
