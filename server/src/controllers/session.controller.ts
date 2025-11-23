@@ -80,22 +80,29 @@ export const createSession = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-export const getActiveSessions = catchAsync(async (req: Request, res: Response) => {
+export const getActiveSessions = catchAsync(
+  async (_req: Request, res: Response) => {
+    const sessions = await Session.find({ status: "active" })
+      .populate("host", "name avatar")
+      .sort({ createdAt: -1 })
+      .limit(20);
 
-})
+    res.status(200).json({ sessions });
+  }
+);
 
-export const getRecentSessions = catchAsync(async (req: Request, res: Response) => {
+export const getRecentSessions = catchAsync(
+  async (req: Request, res: Response) => {
+    
+  }
+);
 
-})
+export const getSessionById = catchAsync(
+  async (req: Request, res: Response) => {}
+);
 
-export const getSessionById = catchAsync(async (req: Request, res: Response) => {
+export const joinSession = catchAsync(
+  async (req: Request, res: Response) => {}
+);
 
-})
-
-export const joinSession = catchAsync(async (req: Request, res: Response) => {
-
-})
-
-export const endSession = catchAsync(async (req: Request, res: Response) => {
-
-})
+export const endSession = catchAsync(async (req: Request, res: Response) => {});
