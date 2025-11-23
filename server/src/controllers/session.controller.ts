@@ -86,17 +86,6 @@ export const createSession = catchAsync(async (req: Request, res: Response) => {
  * Fetch the most recent active coding sessions.
  *
  * Access: Protected
- *
- * Behavior:
- *   - Returns up to 20 most recently created active sessions
- *   - Sessions are sorted newest → oldest
- *   - Populates minimal host info (name, avatar)
- *
- * Response:
- *   200 OK
- *   {
- *     sessions: Session[]
- *   }
  */
 export const getActiveSessions = catchAsync(
   async (_req: Request, res: Response) => {
@@ -141,23 +130,11 @@ export const getRecentSessions = catchAsync(
  * Fetch a single session by its MongoDB ID.
  *
  * Access: Protected
- *
- * Behavior:
- *   - Looks up a session by its ID
- *   - Populates host + participant with minimal user info
- *   - Throws 404 if the session does not exist
- *
- * Response:
- *   200 OK
- *   {
- *     session: Session
- *   }
  */
 export const getSessionById = catchAsync(
   async (req: Request, res: Response) => {
     const { sessionId } = req.params;
 
-    // Find session by ID
     const session = await Session.findById(sessionId)
       .populate("host", "name email")
       .populate("participant", "name email");
@@ -170,8 +147,97 @@ export const getSessionById = catchAsync(
   }
 );
 
+/**
+ * POST /api/session/:sessionId/participants
+ * ------------------------------------------------------------
+ * Join an active session as the participant.
+ *
+ * Access: Protected
+ *
+ * Behavior:
+ *   - Ensures session exists and is not full
+ *   - Sets participant to current user
+ *   - Adds user to the session chat channel
+ *
+ * Response:
+ *   200 OK { session }
+ */
 export const joinSession = catchAsync(
-  async (req: Request, res: Response) => {}
+  async (req: Request, res: Response) => {
+    const { sessionId } = req.params;
+    const userId = req.user?._id;
+    const clerkId = req.user?.clerkId;
+
+    if (!userId || !clerkId) {
+      throw new AppError("Unauthorized: missing user context", 401);
+    }
+
+    const session = await Session.findById(sessionId);
+    if (!session) throw new AppError("Session not found", 404);
+
+    if (session.status !== "active") {
+      throw new AppError("Session is not active", 400);
+    }
+
+    if (session.participant) {
+      throw new AppError("Session is full", 409);
+    }
+
+    session.participant = userId;
+    await session.save();
+
+    const channel = chatClient.channel("messaging", session.callId);
+    await channel.addMembers([clerkId]);
+
+    return res.status(200).json({ session });
+  }
 );
 
-export const endSession = catchAsync(async (req: Request, res: Response) => {});
+/**
+ * PATCH /api/session/:sessionId/status
+ * ------------------------------------------------------------
+ * End a session (host only). Marks session completed and
+ * tears down Stream video call + chat channel.
+ *
+ * Access: Protected (host only)
+ *
+ * Behavior:
+ *   - Validates session exists
+ *   - Ensures requester is host
+ *   - Prevents double-ending
+ *   - Sets status to "completed"
+ *   - Deletes Stream call and chat channel
+ *
+ * Response:
+ *   200 OK { session }
+ */
+export const endSession = catchAsync(async (req: Request, res: Response) => {
+  const { sessionId } = req.params;
+  const userId = req.user?._id;
+
+  if (!userId) {
+    throw new AppError("Unauthorized: missing user context", 401);
+  }
+
+  const session = await Session.findById(sessionId);
+  if (!session) throw new AppError("Session not found", 404);
+
+  if (session.host.toString() !== userId.toString()) {
+    throw new AppError("Only host can end session", 403);
+  }
+
+  if (session.status === "completed") {
+    throw new AppError("Session is already completed", 400);
+  }
+
+  session.status = "completed";
+  await session.save();
+
+  const call = streamClient.video.call("default", session.callId);
+  await call.delete({ hard: true });
+
+  const channel = chatClient.channel("messaging", session.callId);
+  await channel.delete();
+
+  return res.status(200).json({ session });
+});
