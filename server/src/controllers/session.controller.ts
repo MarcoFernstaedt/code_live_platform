@@ -91,9 +91,29 @@ export const getActiveSessions = catchAsync(
   }
 );
 
+/**
+ * GET /api/session/recent
+ * ------------------------------------------------------------
+ * Fetch the most recent completed sessions for the authenticated user.
+ *
+ * Access: Protected
+ */
 export const getRecentSessions = catchAsync(
   async (req: Request, res: Response) => {
-    
+    const userId = req.user?._id;
+
+    if (!userId) {
+      throw new AppError("Unauthorized: missing user context", 401);
+    }
+
+    const sessions = await Session.find({
+      status: "completed",
+      $or: [{ host: userId }, { participant: userId }],
+    })
+      .sort({ createdAt: -1 })
+      .limit(20);
+
+    return res.status(200).json({ sessions });
   }
 );
 
