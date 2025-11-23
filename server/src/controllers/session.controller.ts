@@ -80,6 +80,24 @@ export const createSession = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+/**
+ * GET /api/session/active
+ * ------------------------------------------------------------
+ * Fetch the most recent active coding sessions.
+ *
+ * Access: Protected
+ *
+ * Behavior:
+ *   - Returns up to 20 most recently created active sessions
+ *   - Sessions are sorted newest → oldest
+ *   - Populates minimal host info (name, avatar)
+ *
+ * Response:
+ *   200 OK
+ *   {
+ *     sessions: Session[]
+ *   }
+ */
 export const getActiveSessions = catchAsync(
   async (_req: Request, res: Response) => {
     const sessions = await Session.find({ status: "active" })
@@ -87,7 +105,7 @@ export const getActiveSessions = catchAsync(
       .sort({ createdAt: -1 })
       .limit(20);
 
-    res.status(200).json({ sessions });
+    return res.status(200).json({ sessions });
   }
 );
 
