@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Types, Schema, model } from "mongoose";
 
 /**
  * IUser
@@ -19,6 +19,7 @@ import { Schema, model } from "mongoose";
  * - `timestamps` automatically adds createdAt / updatedAt
  */
 export interface IUser {
+  _id: Types.ObjectId;
   name: string;
   email: string;
   avatar?: string;

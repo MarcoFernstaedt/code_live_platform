@@ -1,9 +1,26 @@
-import {Router} from 'express'
-import { getStreamToken } from '../controllers/chat.controller.js';
-import { protectRoute } from '../middleware/protectRoute.js';
+import { Router } from "express";
+import { protectRoute } from "../middleware/protectRoute.js";
+import {
+  createSession,
+  getActiveSessions,
+  getRecentSessions,
+  getSessionById,
+  joinSession,
+  endSession,
+} from "../controllers/session.controller.js";
 
-const chatRoutes = Router()
+const sessionRoutes = Router();
 
-chatRoutes.get('/token', protectRoute, getStreamToken);
+// Collection routes
+sessionRoutes.post("/", protectRoute, createSession);
+sessionRoutes.get("/active", protectRoute, getActiveSessions);
+sessionRoutes.get("/recent", protectRoute, getRecentSessions);
 
-export default chatRoutes;
+// Resource route
+sessionRoutes.get("/:sessionId", protectRoute, getSessionById);
+
+// Nested resource actions
+sessionRoutes.post("/:sessionId/participants", protectRoute, joinSession);
+sessionRoutes.patch("/:sessionId/status", protectRoute, endSession);
+
+export default sessionRoutes;

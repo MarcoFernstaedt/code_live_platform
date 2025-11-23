@@ -20,7 +20,7 @@
  *   - Ensures portability and strong typing across the backend
  */
 
-import { StreamChat, type UserResponse } from "stream-chat";
+import { StreamChat, StreamClient, type UserResponse } from "stream-chat";
 import { ENV } from "./env.js";
 
 // ------------------------------------------------------------
@@ -37,6 +37,7 @@ if (!apiKey || !apiSecret) {
 // Stream Chat Server Client
 // ------------------------------------------------------------
 export const chatClient = StreamChat.getInstance(apiKey, apiSecret);
+export const streamClient = new StreamClient(apiKey, apiSecret); 
 
 // ------------------------------------------------------------
 // Types
