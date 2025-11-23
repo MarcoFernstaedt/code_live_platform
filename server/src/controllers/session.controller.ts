@@ -135,8 +135,39 @@ export const getRecentSessions = catchAsync(
   }
 );
 
+/**
+ * GET /api/session/:sessionId
+ * ------------------------------------------------------------
+ * Fetch a single session by its MongoDB ID.
+ *
+ * Access: Protected
+ *
+ * Behavior:
+ *   - Looks up a session by its ID
+ *   - Populates host + participant with minimal user info
+ *   - Throws 404 if the session does not exist
+ *
+ * Response:
+ *   200 OK
+ *   {
+ *     session: Session
+ *   }
+ */
 export const getSessionById = catchAsync(
-  async (req: Request, res: Response) => {}
+  async (req: Request, res: Response) => {
+    const { sessionId } = req.params;
+
+    // Find session by ID
+    const session = await Session.findById(sessionId)
+      .populate("host", "name email")
+      .populate("participant", "name email");
+
+    if (!session) {
+      throw new AppError("Session not found", 404);
+    }
+
+    return res.status(200).json({ session });
+  }
 );
 
 export const joinSession = catchAsync(
