@@ -28,10 +28,6 @@ app.use(
   })
 );
 
-app.get('/health-check', (_req: Request, res: Response) => {
-  res.status(200).send('ok')
-})
-
 // routes
 app.use('/api', router);
 
@@ -39,7 +35,7 @@ app.use('/api', router);
 if (ENV.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../client/dist')));
 
-  app.get('/*', (_req: Request, res: Response) => {
+  app.all('/*all', (_req: Request, res: Response) => {
     res.sendFile(path.join(__dirname, '../client/dist/index.html'));
   });
 }
