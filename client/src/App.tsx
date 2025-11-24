@@ -3,17 +3,25 @@ import { Navigate, Route, Routes } from "react-router";
 import HomePage from "./pages/HomePage";
 import ProblemsPage from "./pages/ProblemsPage";
 import { Toaster } from "react-hot-toast";
+import type { FC } from "react";
 
-const App = () => {
-  const { isSignedIn } = useUser();
+const App: FC = () => {
+  const { isLoaded, isSignedIn } = useUser();
+
+  if (!isLoaded) {
+    return null;
+  }
+
   return (
     <>
       <Routes>
         <Route path="/" element={<HomePage />} />
+
         <Route
           path="/problems"
-          element={<ProblemsPage />}
-        // element={isSignedIn ? <ProblemsPage /> : <Navigate to="/" />}
+          element={
+            isSignedIn ? <ProblemsPage /> : <Navigate to="/" replace />
+          }
         />
       </Routes>
 
