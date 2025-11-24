@@ -20,7 +20,8 @@
  *   - Ensures portability and strong typing across the backend
  */
 
-import { StreamChat, StreamClient, type UserResponse } from "stream-chat";
+import { StreamChat, type UserResponse } from "stream-chat";
+import { StreamClient } from "@stream-io/node-sdk";
 import { ENV } from "./env.js";
 
 // ------------------------------------------------------------
