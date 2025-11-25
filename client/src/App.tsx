@@ -23,6 +23,7 @@ const App: FC = () => {
             isSignedIn ? <ProblemsPage /> : <Navigate to="/" replace />
           }
         />
+        <route path='/probll' />
       </Routes>
 
       <Toaster toastOptions={{ duration: 3000 }} />
