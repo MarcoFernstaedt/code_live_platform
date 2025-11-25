@@ -4,6 +4,7 @@ import HomePage from "./pages/HomePage";
 import ProblemsPage from "./pages/ProblemsPage";
 import { Toaster } from "react-hot-toast";
 import type { FC } from "react";
+import ProblemDetailsPage from "./pages/ProblemDetailsPage";
 
 const App: FC = () => {
   const { isLoaded, isSignedIn } = useUser();
@@ -23,7 +24,7 @@ const App: FC = () => {
             isSignedIn ? <ProblemsPage /> : <Navigate to="/" replace />
           }
         />
-        <route path='/probll' />
+        <Route path='/problem/:id' element={isSignedIn ? <ProblemDetailsPage /> : <Navigate to='/' replace />} />
       </Routes>
 
       <Toaster toastOptions={{ duration: 3000 }} />

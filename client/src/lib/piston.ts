@@ -1,46 +1,48 @@
+// ----------------------------------------
+// Piston API Base
+// ----------------------------------------
 const PISTON_API_BASE = "https://emkc.org/api/v2/piston";
 
-/**
- * Languages your app supports.
- * Keep this in sync with UI language selectors.
- */
+// ----------------------------------------
+// Supported Languages
+// ----------------------------------------
 export type SupportedLanguage = "javascript" | "python" | "java";
 
-type LanguageConfig = Readonly<{
+interface LanguageConfig {
   language: SupportedLanguage;
   version: string;
-}>;
+}
 
+// Specific piston runtime versions
 const LANGUAGE_VERSION: Record<SupportedLanguage, LanguageConfig> = {
   javascript: { language: "javascript", version: "18.15.0" },
   python: { language: "python", version: "3.10.0" },
   java: { language: "java", version: "15.0.2" },
 } as const;
 
+// File extensions per language
 const FILE_EXT: Record<SupportedLanguage, string> = {
   javascript: "js",
   python: "py",
   java: "java",
-} as const;
+};
 
-const getFileExtension = (language: SupportedLanguage): string => FILE_EXT[language];
+const getFileExtension = (language: SupportedLanguage): string =>
+  FILE_EXT[language];
 
-/**
- * Result returned by executeCode
- */
+// ----------------------------------------
+// Execution Result Types
+// ----------------------------------------
 export type ExecuteResult =
   | { success: true; output: string }
   | { success: false; error: string; output?: string };
 
-/**
- * Piston execute endpoint response (minimal shape we rely on).
- * The API returns more fields; we keep it narrow for safety.
- */
-type PistonExecuteResponse = {
+// Minimal shape of piston runtime response
+interface PistonExecuteResponse {
   run?: {
     stdout?: string;
     stderr?: string;
-    output?: string; // some piston builds include combined output
+    output?: string;
     code?: number;
     signal?: string | null;
   };
@@ -50,22 +52,23 @@ type PistonExecuteResponse = {
     code?: number;
   };
   message?: string;
+}
+
+// ----------------------------------------
+// Build payload for piston
+// ----------------------------------------
+const buildFilesPayload = (language: SupportedLanguage, code: string) => {
+  return [
+    {
+      name: `main.${getFileExtension(language)}`,
+      content: code,
+    },
+  ];
 };
 
-const buildFilesPayload = (language: SupportedLanguage, code: string) => [
-  {
-    name: `main.${getFileExtension(language)}`,
-    content: code,
-  },
-];
-
-/**
- * Execute code using Piston.
- *
- * @param language - supported language key
- * @param code - source code to run
- * @param opts.timeoutMs - abort request after N ms (default 12s)
- */
+// ----------------------------------------
+// Execute Code via Piston API
+// ----------------------------------------
 export const executeCode = async (
   language: SupportedLanguage,
   code: string,
@@ -97,14 +100,16 @@ export const executeCode = async (
       const text = await res.text().catch(() => "");
       return {
         success: false,
-        error: `Piston request failed (${res.status}). ${text || res.statusText}`,
+        error: `Piston request failed (${res.status}) — ${text || res.statusText}`,
       };
     }
 
     const data = (await res.json()) as PistonExecuteResponse;
 
+    // Handle compilation errors
     const compileErr =
       data.compile?.stderr?.trim() || data.compile?.stdout?.trim();
+
     if (compileErr) {
       return {
         success: false,
@@ -113,12 +118,10 @@ export const executeCode = async (
       };
     }
 
+    // Merge stdout + stderr if needed
     const runOutput =
       data.run?.output ??
-      [
-        data.run?.stdout?.trim(),
-        data.run?.stderr?.trim(),
-      ]
+      [data.run?.stdout?.trim(), data.run?.stderr?.trim()]
         .filter(Boolean)
         .join("\n");
 
@@ -126,7 +129,7 @@ export const executeCode = async (
       return { success: false, error: data.message };
     }
 
-    // If stderr exists and exit code non-zero, treat as failure but still return output.
+    // Runtime checks
     const exitCode = data.run?.code ?? 0;
     const stderr = data.run?.stderr?.trim();
 
@@ -147,9 +150,10 @@ export const executeCode = async (
       };
     }
 
-    const message =
-      err instanceof Error ? err.message : "Unknown execution error.";
-    return { success: false, error: message };
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown execution error.",
+    };
   } finally {
     clearTimeout(timeout);
   }
