@@ -4,38 +4,10 @@ import Navbar from "../components/Navbar";
 import { PROBLEMS } from "../data/problems";
 import { ChevronRightIcon, Code2Icon } from "lucide-react";
 import { getDifficultyBadgeClass } from "../lib/utils";
-
-type Difficulty = "Easy" | "Medium" | "Hard";
-
-interface Problem {
-    id: string;
-    title: string;
-    difficulty: Difficulty | string;
-    category: string;
-    description: {
-        text: string;
-        notes: string[];
-    };
-    examples: {
-        input: string;
-        output: string;
-        explanation?: string;
-    }[];
-    constraints: string[];
-    starterCode: {
-        javascript: string;
-        python: string;
-        java: string;
-    };
-    expectedOutput: {
-        javascript: string;
-        python: string;
-        java: string;
-    };
-}
+import type { Problem } from "../types";
 
 const ProblemsPage: FC = () => {
-    const problems = Object.values(PROBLEMS) as Problem[];
+    const problems: Problem[] = Object.values(PROBLEMS);
 
     const easyProblemsCount = problems.filter((p) => p.difficulty === "Easy").length;
     const mediumProblemsCount = problems.filter((p) => p.difficulty === "Medium").length;
@@ -74,14 +46,14 @@ const ProblemsPage: FC = () => {
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <h2 className="text-xl font-bold">{problem.title}</h2>
+
                                                     <span
-                                                        className={`badge ${getDifficultyBadgeClass(
-                                                            problem.difficulty
-                                                        )}`}
+                                                        className={`badge ${getDifficultyBadgeClass(problem.difficulty)}`}
                                                     >
                                                         {problem.difficulty}
                                                     </span>
                                                 </div>
+
                                                 <p className="text-sm text-base-content/60">
                                                     {problem.category}
                                                 </p>
@@ -112,14 +84,17 @@ const ProblemsPage: FC = () => {
                                 <div className="stat-title">Total Problems</div>
                                 <div className="stat-value text-primary">{problems.length}</div>
                             </div>
+
                             <div className="stat">
                                 <div className="stat-title">Easy</div>
                                 <div className="stat-value text-success">{easyProblemsCount}</div>
                             </div>
+
                             <div className="stat">
                                 <div className="stat-title">Medium</div>
                                 <div className="stat-value text-warning">{mediumProblemsCount}</div>
                             </div>
+
                             <div className="stat">
                                 <div className="stat-title">Hard</div>
                                 <div className="stat-value text-error">{hardProblemsCount}</div>
