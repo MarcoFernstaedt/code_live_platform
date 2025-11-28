@@ -13,7 +13,7 @@ import { Schema, model, type Types } from "mongoose";
  * - matching host and participant users
  *
  * Fields:
- *  problemTitle:   Title of the coding problem for the session
+ *  problem:   Title of the coding problem for the session
  *  difficulty:     Difficulty tier ("easy" | "medium" | "hard")
  *  status:         Lifecycle of the session ("active" or "completed")
  *  callId:         Stream (or other provider) call identifier used
@@ -27,7 +27,7 @@ import { Schema, model, type Types } from "mongoose";
  * - `timestamps` automatically manage createdAt / updatedAt.
  */
 export interface ISession {
-  problemTitle: string;
+  problem: string;
   difficulty: "easy" | "medium" | "hard";
   status: "active" | "completed";
   callId: string;
@@ -40,7 +40,7 @@ export interface ISession {
 // ------------------------
 const sessionSchema = new Schema<ISession>(
   {
-    problemTitle: {
+    problem: {
       type: String,
       required: true,
       trim: true,

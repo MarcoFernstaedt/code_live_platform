@@ -21,9 +21,7 @@ app.use(cors({
   origin: ENV.CLIENT_URL,
   credentials: true,
 }))
-app.use(clerkMiddleware)
-app.use(errorHandler)
-
+app.use(clerkMiddleware())
 app.use(
   "/api/inngest",
   serve({
@@ -31,6 +29,7 @@ app.use(
     functions,
   })
 );
+app.use(errorHandler)
 
 // routes
 app.use('/api', router);

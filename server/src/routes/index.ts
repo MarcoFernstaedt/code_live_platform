@@ -4,7 +4,7 @@ import sessionRoutes from './session.route.js';
 
 const router = Router();
 
-router.get('/chat', chatRoutes);
-router.get('/session', sessionRoutes);
+router.use('/chat', chatRoutes);
+router.use('/session', sessionRoutes);
 
 export default router;
