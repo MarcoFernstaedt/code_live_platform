@@ -13,7 +13,7 @@ import { AppError } from "../lib/AppError.js";
  * Access: Protected (requires protectRoute middleware)
  *
  * Request Body:
- *   - problemTitle: string
+ *   - problem: string
  *   - difficulty: "easy" | "medium" | "hard"
  *
  * Behavior:
@@ -30,10 +30,10 @@ import { AppError } from "../lib/AppError.js";
  * }
  */
 export const createSession = catchAsync(async (req: Request, res: Response) => {
-  const { problemTitle, difficulty } = req.body;
+  const { problem, difficulty } = req.body;
 
-  if (!problemTitle || !difficulty) {
-    throw new AppError("problemTitle and difficulty are required", 400);
+  if (!problem || !difficulty) {
+    throw new AppError("problem and difficulty are required", 400);
   }
 
   const hostId = req.user?._id;
@@ -48,7 +48,7 @@ export const createSession = catchAsync(async (req: Request, res: Response) => {
     .slice(2, 9)}`;
 
   const session = await Session.create({
-    problemTitle,
+    problem,
     difficulty,
     host: hostId,
     callId,
@@ -58,7 +58,7 @@ export const createSession = catchAsync(async (req: Request, res: Response) => {
     data: {
       created_by_id: clerkId,
       custom: {
-        problemTitle,
+        problem,
         difficulty,
         sessionId: session._id.toString(),
       },
@@ -66,7 +66,7 @@ export const createSession = catchAsync(async (req: Request, res: Response) => {
   });
 
   const channel = chatClient.channel("messaging", callId, {
-    name: `${problemTitle} Session`,
+    name: `${problem} Session`,
     created_by_id: clerkId,
     members: [clerkId],
   });
@@ -91,12 +91,12 @@ export const getActiveSessions = catchAsync(
   async (_req: Request, res: Response) => {
     const sessions = await Session.find({ status: "active" })
       .populate("host", "name avatar")
+      .populate("participant", "name avatar")
       .sort({ createdAt: -1 })
       .limit(20);
-
     return res.status(200).json({ sessions });
   }
-);
+)
 
 /**
  * GET /api/session/recent
