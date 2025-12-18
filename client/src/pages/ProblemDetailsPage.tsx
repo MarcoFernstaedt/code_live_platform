@@ -13,6 +13,7 @@ import ProblemDescription from "../components/ProblemDescription";
 import type { SupportedLanguage, Problem } from "../types";
 import { executeCode } from "../lib/piston";
 import toast from "react-hot-toast";
+import confetti from "canvas-confetti";
 
 const ProblemDetailsPage: FC = () => {
     const { id } = useParams<{ id: string }>();

@@ -6,6 +6,7 @@ import ProblemDetailsPage from "./pages/ProblemDetailsPage";
 import Dashboard from "./components/Dashboard";
 import { Toaster } from "react-hot-toast";
 import type { FC } from "react";
+import SessionPage from "./pages/SessionPage";
 
 const App: FC = () => {
   const { isLoaded, isSignedIn } = useUser();
@@ -40,6 +41,13 @@ const App: FC = () => {
           path="/dashboard"
           element={
             isSignedIn ? <Dashboard /> : <Navigate to="/" replace />
+          }
+        />
+
+        <Route
+          path="/session/:id"
+          element={
+            isSignedIn ? <SessionPage /> : <Navigate to="/" replace />
           }
         />
       </Routes>

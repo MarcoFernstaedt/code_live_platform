@@ -35,6 +35,11 @@ const sessionApi = {
     const res = await axiosInstance.patch<{ session: Session }>(`/session/${id}/status`);
     return res.data;
   },
+
+  getStreamToken: async () => {
+    const res = axiosInstance.get('/chat/token')
+    return (await res).data;
+  }
 };
 
 export default sessionApi;
