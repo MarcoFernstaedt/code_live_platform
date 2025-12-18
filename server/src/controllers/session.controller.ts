@@ -136,8 +136,8 @@ export const getSessionById = catchAsync(
     const { sessionId } = req.params;
 
     const session = await Session.findById(sessionId)
-      .populate("host", "name email")
-      .populate("participant", "name email");
+      .populate("host", "name email avatar clerkId")
+      .populate("participant", "name email avatar clerkId");
 
     if (!session) {
       throw new AppError("Session not found", 404);
