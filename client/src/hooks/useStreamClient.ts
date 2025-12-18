@@ -1,89 +1,127 @@
-import { useState, useEffect } from "react";
-import { StreamChat } from "stream-chat";
+import { useEffect, useState } from "react";
+import { StreamChat, type Channel as StreamChannel } from "stream-chat";
 import toast from "react-hot-toast";
 import { initializeStreamClient, resetStreamClient } from "../lib/stream";
 import sessionApi from "../api/sessions";
+import type { Session } from "../types";
 
-const useStreamClient = (session, loadingSession, isHost, isParticipant) => {
-  const [streamClient, setStreamClient] = useState(null);
-  const [call, setCall] = useState(null);
-  const [chatClient, setChatClient] = useState(null);
-  const [channel, setChannel] = useState(null);
-  const [isInitializingCall, setIsInitializingCall] = useState(true);
+// If your project uses @stream-io/video-client types:
+import type { Call, StreamVideoClient } from "@stream-io/video-client";
+
+type StreamTokenResponse = {
+  token: string;
+  userId: string;
+  userName: string;
+  userImage?: string;
+};
+
+type UseStreamClientReturn = {
+  streamClient: StreamVideoClient | null;
+  call: Call | null;
+  chatClient: StreamChat | null;
+  channel: StreamChannel | null;
+  isInitializingCall: boolean;
+};
+
+const useStreamClient = (
+  session: Session | null | undefined,
+  loadingSession: boolean,
+  isHost: boolean,
+  isParticipant: boolean
+): UseStreamClientReturn => {
+  const [streamClient, setStreamClient] = useState<StreamVideoClient | null>(null);
+  const [call, setCall] = useState<Call | null>(null);
+  const [chatClient, setChatClient] = useState<StreamChat | null>(null);
+  const [channel, setChannel] = useState<StreamChannel | null>(null);
+  const [isInitializingCall, setIsInitializingCall] = useState<boolean>(false);
 
   useEffect(() => {
-    let videoCall = null;
-    let chatClientInstance = null;
+    let cancelled = false;
+
+    let videoCall: Call | null = null;
+    let chatClientInstance: StreamChat | null = null;
 
     const initCall = async () => {
+      // only show spinner if we actually try to init
+      setIsInitializingCall(false);
+
       if (!session?.callId) return;
+      if (loadingSession) return;
       if (!isHost && !isParticipant) return;
       if (session.status === "completed") return;
 
+      setIsInitializingCall(true);
+
       try {
-        const { token, userId, userName, userImage } = await sessionApi.getStreamToken();
+        const tokenRes = (await sessionApi.getStreamToken()) as StreamTokenResponse;
+        const { token, userId, userName, userImage } = tokenRes;
 
-        const client = await initializeStreamClient(
-          {
-            id: userId,
-            name: userName,
-            image: userImage,
-          },
+        const client = (await initializeStreamClient(
+          { id: userId, name: userName, image: userImage },
           token
-        );
+        )) as StreamVideoClient;
 
+        if (cancelled) return;
         setStreamClient(client);
 
-        videoCall = client.call("default", session.callId);
+        videoCall = client.call("default", session.callId) as Call;
         await videoCall.join({ create: true });
+        if (cancelled) return;
         setCall(videoCall);
 
-        const apiKey = import.meta.env.VITE_STREAM_API_KEY;
+        const apiKey = import.meta.env.VITE_STREAM_API_KEY as string | undefined;
+        if (!apiKey) throw new Error("Missing VITE_STREAM_API_KEY");
+
         chatClientInstance = StreamChat.getInstance(apiKey);
 
         await chatClientInstance.connectUser(
-          {
-            id: userId,
-            name: userName,
-            image: userImage,
-          },
+          { id: userId, name: userName, image: userImage },
           token
         );
+        if (cancelled) return;
         setChatClient(chatClientInstance);
 
         const chatChannel = chatClientInstance.channel("messaging", session.callId);
         await chatChannel.watch();
+        if (cancelled) return;
         setChannel(chatChannel);
-      } catch (error) {
-        toast.error("Failed to join video call");
-        console.error("Error init call", error);
+      } catch (err) {
+        if (!cancelled) {
+          toast.error("Failed to join video call");
+          // eslint-disable-next-line no-console
+          console.error("useStreamClient init error:", err);
+        }
       } finally {
-        setIsInitializingCall(false);
+        if (!cancelled) setIsInitializingCall(false);
       }
     };
 
-    if (session && !loadingSession) initCall();
+    void initCall();
 
     return () => {
-      (async () => {
+      cancelled = true;
+
+      void (async () => {
         try {
           if (videoCall) await videoCall.leave();
           if (chatClientInstance) await chatClientInstance.disconnectUser();
           await resetStreamClient();
-        } catch (error) {
-          console.error("Cleanup error:", error);
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error("useStreamClient cleanup error:", err);
         }
       })();
-    };
-  }, [session, loadingSession, isHost, isParticipant]);
 
-  return {
-    streamClient,
-    call,
-    chatClient,
-    channel,
-    isInitializingCall,
-  };
-}
+      // clear local state on unmount so UI doesn't show stale objects
+      setCall(null);
+      setChannel(null);
+      setChatClient(null);
+      setStreamClient(null);
+      setIsInitializingCall(false);
+    };
+  }, [session?.callId, session?.status, loadingSession, isHost, isParticipant]);
+
+  return { streamClient, call, chatClient, channel, isInitializingCall };
+};
 
 export default useStreamClient;
