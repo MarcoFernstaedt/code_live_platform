@@ -1,5 +1,5 @@
 import { useUser } from "@clerk/clerk-react";
-import { useEffect, useMemo, useRef, useState, type FC } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FC } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useEndSession, useJoinSession, useSessionById } from "../hooks/useSessions";
 import { PROBLEMS } from "../data/problems";
@@ -31,21 +31,12 @@ const SessionPage: FC = () => {
         data: sessionData,
         isLoading: loadingSession,
         refetch,
-    } = useSessionById(id);
+    } = useSessionById(id ?? null);
 
     const joinSessionMutation = useJoinSession();
     const endSessionMutation = useEndSession();
 
-    // Normalize session shape
-    // const session = useMemo<Session | null>(() => {
-    //     if (!sessionData) return null;
-    //     if (typeof sessionData === "object" && sessionData !== null && "session" in (sessionData as any)) {
-    //         return ((sessionData as any).session as Session) ?? null;
-    //     }
-    //     return sessionData as Session;
-    // }, [sessionData]);
-
-    const session = sessionData;
+    const session: Session | null = sessionData ?? null;
 
     const isHost = !!session?.host?.clerkId && !!user?.id && session.host.clerkId === user.id;
     const isParticipant =
@@ -60,10 +51,7 @@ const SessionPage: FC = () => {
 
     const problemData = useMemo<Problem | null>(() => {
         if (!session?.problem) return null;
-        return (
-            (Object.values(PROBLEMS).find((p) => p.title === session.problem) as Problem | undefined) ??
-            null
-        );
+        return (Object.values(PROBLEMS).find((p) => p.title === session.problem) as Problem | undefined) ?? null;
     }, [session?.problem]);
 
     const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>("javascript");
@@ -113,7 +101,7 @@ const SessionPage: FC = () => {
         if (session.status === "completed") navigate("/dashboard");
     }, [session, loadingSession, navigate]);
 
-    const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const handleLanguageChange = (e: ChangeEvent<HTMLSelectElement>) => {
         const newLang = e.target.value as SupportedLanguage;
         setSelectedLanguage(newLang);
         setCode(problemData?.starterCode?.[newLang] ?? "");
@@ -206,7 +194,7 @@ const SessionPage: FC = () => {
                                                 <h2 className="text-xl font-bold mb-4 text-base-content">Description</h2>
                                                 <div className="space-y-3 text-base leading-relaxed">
                                                     <p className="text-base-content/90">{problemData.description.text}</p>
-                                                    {problemData.description.notes?.map((note, idx) => (
+                                                    {problemData.description.notes?.map((note: string, idx: number) => (
                                                         <p key={idx} className="text-base-content/90">
                                                             {note}
                                                         </p>
@@ -221,7 +209,7 @@ const SessionPage: FC = () => {
                                                 <h2 className="text-xl font-bold mb-4 text-base-content">Examples</h2>
 
                                                 <div className="space-y-4">
-                                                    {problemData.examples.map((example, idx) => (
+                                                    {problemData.examples.map((example: Problem["examples"][number], idx: number) => (
                                                         <div key={idx}>
                                                             <div className="flex items-center gap-2 mb-2">
                                                                 <span className="badge badge-sm">{idx + 1}</span>
@@ -255,7 +243,7 @@ const SessionPage: FC = () => {
                                             <div className="bg-base-100 rounded-xl shadow-sm p-5 border border-base-300">
                                                 <h2 className="text-xl font-bold mb-4 text-base-content">Constraints</h2>
                                                 <ul className="space-y-2 text-base-content/90">
-                                                    {problemData.constraints.map((constraint, idx) => (
+                                                    {problemData.constraints.map((constraint: string, idx: number) => (
                                                         <li key={idx} className="flex gap-2">
                                                             <span className="text-primary">•</span>
                                                             <code className="text-sm">{constraint}</code>
@@ -278,7 +266,7 @@ const SessionPage: FC = () => {
                                             code={code}
                                             isRunning={isRunning}
                                             onLanguageChange={handleLanguageChange}
-                                            onCodeChange={(value: string) => setCode(value)}
+                                            onChange={(value: string) => setCode(value)}
                                             onRunCode={handleRunCode}
                                         />
                                     </Panel>

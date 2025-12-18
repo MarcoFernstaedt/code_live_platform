@@ -3,7 +3,6 @@ import { StreamChat, type Channel as StreamChannel } from "stream-chat";
 import toast from "react-hot-toast";
 import { initializeStreamClient, resetStreamClient } from "../lib/stream";
 import sessionApi from "../api/sessions";
-import type { Session } from "../types";
 
 // These are type-only to keep runtime clean; adjust paths if your SDK exports differ.
 import type { Call, StreamVideoClient } from "@stream-io/video-client";
