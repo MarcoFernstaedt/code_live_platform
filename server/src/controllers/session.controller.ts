@@ -66,7 +66,6 @@ export const createSession = catchAsync(async (req: Request, res: Response) => {
   });
 
   const channel = chatClient.channel("messaging", callId, {
-    name: `${problem} Session`,
     created_by_id: clerkId,
     members: [clerkId],
   });
