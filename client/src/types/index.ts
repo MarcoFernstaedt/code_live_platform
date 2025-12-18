@@ -30,6 +30,9 @@ export interface Problem {
   examples: ProblemExample[];
   constraints: string[];
   starterCode: Record<SupportedLanguage, string>;
+
+  // ✅ add this to match your PROBLEMS object
+  expectedOutput: Record<SupportedLanguage, string>;
 }
 
 /* =========================

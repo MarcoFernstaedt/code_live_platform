@@ -1,5 +1,5 @@
 import { useUser } from "@clerk/clerk-react";
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FC } from "react";
+import { useEffect, useMemo, useRef, useState, type FC } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useEndSession, useJoinSession, useSessionById } from "../hooks/useSessions";
 import { PROBLEMS } from "../data/problems";
@@ -101,10 +101,10 @@ const SessionPage: FC = () => {
         if (session.status === "completed") navigate("/dashboard");
     }, [session, loadingSession, navigate]);
 
-    const handleLanguageChange = (e: ChangeEvent<HTMLSelectElement>) => {
-        const newLang = e.target.value as SupportedLanguage;
-        setSelectedLanguage(newLang);
-        setCode(problemData?.starterCode?.[newLang] ?? "");
+    // ✅ FIX: CodeEditorPanel expects (lang: SupportedLanguage) => void
+    const handleLanguageChange = (lang: SupportedLanguage) => {
+        setSelectedLanguage(lang);
+        setCode(problemData?.starterCode?.[lang] ?? "");
         setOutput(null);
     };
 

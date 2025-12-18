@@ -1,48 +1,45 @@
-import { useEffect, useState, type FC } from "react";
+import { useEffect, useMemo, useState, type FC } from "react";
 import { useNavigate, useParams } from "react-router";
 import { PROBLEMS } from "../data/problems";
 import Navbar from "../components/Navbar";
-import {
-    Panel,
-    PanelGroup,
-    PanelResizeHandle,
-} from "react-resizable-panels";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import OutputPanel from "../components/OutputPanel";
 import CodeEditorPanel from "../components/CodeEditorPanel";
 import ProblemDescription from "../components/ProblemDescription";
-import type { SupportedLanguage, Problem } from "../types";
+import type { ExecuteResult, SupportedLanguage, Problem } from "../types";
 import { executeCode } from "../lib/piston";
 import toast from "react-hot-toast";
 import confetti from "canvas-confetti";
 
+type ProblemId = keyof typeof PROBLEMS;
+
+const isProblemId = (value: string): value is ProblemId => value in PROBLEMS;
+
 const ProblemDetailsPage: FC = () => {
-    const { id } = useParams<{ id: string }>();
+    const { id } = useParams<{ id?: string }>();
     const navigate = useNavigate();
 
-    const [currentProblemId, setCurrentProblemId] = useState("two-sum");
-    const [selectedLanguage, setSelectedLanguage] =
-        useState<SupportedLanguage>("javascript");
+    const [currentProblemId, setCurrentProblemId] = useState<ProblemId>("two-sum");
+    const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>("javascript");
 
-    const [code, setCode] = useState(
-        PROBLEMS["two-sum"].starterCode.javascript
-    );
-    const [output, setOutput] = useState<string | null>(null);
-    const [isRunning, setIsRunning] = useState(false);
+    const [code, setCode] = useState<string>(() => PROBLEMS["two-sum"].starterCode.javascript);
+    const [output, setOutput] = useState<ExecuteResult | null>(null);
+    const [isRunning, setIsRunning] = useState<boolean>(false);
 
-    const currentProblem = PROBLEMS[currentProblemId] as Problem;
+    const currentProblem: Problem = useMemo(() => PROBLEMS[currentProblemId] as Problem, [currentProblemId]);
 
     // Sync problem + starter code when route or language changes
     useEffect(() => {
-        if (id && PROBLEMS[id]) {
+        if (!id) return;
+
+        if (isProblemId(id)) {
             setCurrentProblemId(id);
             setCode(PROBLEMS[id].starterCode[selectedLanguage]);
             setOutput(null);
             return;
         }
 
-        if (id) {
-            navigate("/problems", { replace: true });
-        }
+        navigate("/problems", { replace: true });
     }, [id, selectedLanguage, navigate]);
 
     const handleLanguageChange = (lang: SupportedLanguage) => {
@@ -52,23 +49,14 @@ const ProblemDetailsPage: FC = () => {
     };
 
     const handleProblemChange = (problemId: string) => {
-        if (PROBLEMS[problemId]) {
+        if (isProblemId(problemId)) {
             navigate(`/problem/${problemId}`);
         }
     };
 
     const triggerConfetti = () => {
-        confetti({
-            particleCount: 80,
-            spread: 250,
-            origin: { x: 0.2, y: 0.6 },
-        });
-
-        confetti({
-            particleCount: 80,
-            spread: 250,
-            origin: { x: 0.8, y: 0.6 },
-        });
+        confetti({ particleCount: 80, spread: 250, origin: { x: 0.2, y: 0.6 } });
+        confetti({ particleCount: 80, spread: 250, origin: { x: 0.8, y: 0.6 } });
     };
 
     const normalizeOutput = (raw: string): string => {
@@ -80,7 +68,7 @@ const ProblemDetailsPage: FC = () => {
                     .trim()
                     .replace(/\[\s+/g, "[")
                     .replace(/\s+\]/g, "]")
-                    .replace(/\s*,\s*/g, ",")
+                    .replace(/\s*,\s*/g, ","),
             )
             .filter(Boolean)
             .join("\n");
@@ -98,16 +86,14 @@ const ProblemDetailsPage: FC = () => {
             const result = await executeCode(selectedLanguage, code);
 
             if (!result.success) {
-                setOutput(result.output ?? result.error);
-                toast.error('Code execution failed!');
+                setOutput(result);
+                toast.error("Code execution failed!");
                 return;
             }
 
-            setOutput(result.output);
+            setOutput(result);
 
-            const expectedOutput =
-                currentProblem.expectedOutput[selectedLanguage] ?? "";
-
+            const expectedOutput = currentProblem.expectedOutput[selectedLanguage];
             const testPassed = checkIfTestPass(result.output, expectedOutput);
 
             if (testPassed) {
@@ -117,9 +103,8 @@ const ProblemDetailsPage: FC = () => {
                 toast.error("Tests failed. Check your output!");
             }
         } catch (err) {
-            const message =
-                err instanceof Error ? err.message : "Unknown execution error.";
-            setOutput(message);
+            const message = err instanceof Error ? err.message : "Unknown execution error.";
+            setOutput({ success: false, error: message });
             toast.error(message);
         } finally {
             setIsRunning(false);
@@ -138,7 +123,7 @@ const ProblemDetailsPage: FC = () => {
                             problem={currentProblem}
                             currentProblemId={currentProblemId}
                             onProblemChange={handleProblemChange}
-                            allProblems={Object.values(PROBLEMS) as Problem[]}
+                            allProblems={Object.values(PROBLEMS) as unknown as Problem[]}
                         />
                     </Panel>
 
