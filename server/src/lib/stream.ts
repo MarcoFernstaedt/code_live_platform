@@ -86,12 +86,8 @@ const toStreamUser = (user: AppUserForStream): UserResponse => {
  * Safe to call repeatedly—Stream handles idempotency.
  */
 export const upsertStreamUser = async (userData: AppUserForStream) => {
-  try {
-    const streamUser = toStreamUser(userData);
-    await chatClient.upsertUser(streamUser);
-  } catch (err) {
-    console.error("Error in upsertStreamUser:", err);
-  }
+  const streamUser = toStreamUser(userData);
+  await chatClient.upsertUser(streamUser);
 };
 
 // ------------------------------------------------------------
@@ -103,9 +99,5 @@ export const upsertStreamUser = async (userData: AppUserForStream) => {
  * Usually triggered when a Clerk user is deleted.
  */
 export const deleteStreamUser = async (clerkId: string) => {
-  try {
-    await chatClient.deleteUser(clerkId);
-  } catch (err) {
-    console.error("Error in deleteStreamUser:", err);
-  }
+  await chatClient.deleteUser(clerkId);
 };

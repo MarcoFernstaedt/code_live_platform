@@ -29,10 +29,12 @@ app.use(
     functions,
   })
 );
-app.use(errorHandler)
 
 // routes
 app.use('/api', router);
+
+// error handler must be registered after all routes
+app.use(errorHandler);
 
 
 if (ENV.NODE_ENV === 'production') {

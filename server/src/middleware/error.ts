@@ -40,6 +40,10 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction
 ) => {
+  if (!(err instanceof AppError)) {
+    console.error("Unhandled error:", err);
+  }
+
   const appError =
     err instanceof AppError
       ? err
