@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import type { Request, Response } from "express";
 import { catchAsync } from "../lib/catchAsync.js";
 import Session from "../models/Session.js";
@@ -43,9 +44,7 @@ export const createSession = catchAsync(async (req: Request, res: Response) => {
     throw new AppError("Unauthorized: missing user context", 401);
   }
 
-  const callId = `session_${Date.now()}_${Math.random()
-    .toString(36)
-    .slice(2, 9)}`;
+  const callId = `session_${randomUUID()}`;
 
   const session = await Session.create({
     problem,
@@ -176,6 +175,10 @@ export const joinSession = catchAsync(
 
     if (session.status !== "active") {
       throw new AppError("Session is not active", 400);
+    }
+
+    if (session.host.toString() === userId.toString()) {
+      throw new AppError("Host cannot join their own session as participant", 403);
     }
 
     if (session.participant) {
